@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>جسر</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Readex+Pro:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light dark;
+--bg:light-dark(#f4f1ea,#0d1716);--card:light-dark(#fff,#15221f);--ink:light-dark(#14211f,#e7efec);
+--mute:light-dark(#5d6b68,#93a5a0);--line:light-dark(#e1dbcf,#253532);--brand:light-dark(#0f5c55,#4fc1b0);
+--brandInk:light-dark(#fff,#06201c);--tint:light-dark(#e3efec,#17312d);--warn:#e2552d}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans Arabic",system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:760px;margin:0 auto;padding:clamp(18px,4vw,40px) max(4vw,14px) 60px}
+header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font:700 clamp(28px,5vw,40px)/1.1 "Readex Pro",sans-serif;margin:0}
+.sub{color:var(--mute);margin:6px 0 0;font-size:15px}
+.btn{border:0;border-radius:12px;min-height:44px;padding:0 18px;font:500 16px "IBM Plex Sans Arabic",sans-serif;cursor:pointer}
+.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+.panel{background:var(--brand);color:var(--brandInk);border-radius:22px;padding:clamp(16px,3vw,24px);box-shadow:0 14px 30px -18px #0f5c55}
+.panel h2{font:700 22px "Readex Pro",sans-serif;margin:0 0 6px}
+.panel p{margin:0 0 14px;opacity:.9;font-size:15px}
+.field{width:100%;min-height:50px;border:0;border-radius:14px;padding:0 16px;font:inherit;font-size:18px;background:var(--card);color:var(--ink)}
+textarea.field{min-height:120px;padding:14px 16px;resize:vertical;font-size:17px}
+.check{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:15px}
+.check input{width:20px;height:20px}
+.row{display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap}
+.primary{background:var(--brandInk);color:var(--brand);font-weight:700;padding:0 26px}
+.primary:disabled{opacity:.55;cursor:wait}
+.hint{font-size:13px;opacity:.85}
+.err{color:var(--warn);font-weight:500}
+.panel .err{color:#ffd9cc}
+.drop{display:block;margin-top:12px;border:2px dashed color-mix(in srgb,var(--brandInk) 45%,transparent);border-radius:14px;padding:14px;text-align:center;cursor:pointer;font-size:15px}
+.drop.on{background:color-mix(in srgb,var(--brandInk) 14%,transparent)}
+.picked{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{background:color-mix(in srgb,var(--brandInk) 18%,transparent);border-radius:99px;padding:4px 6px 4px 12px;font-size:13px;display:flex;align-items:center;gap:6px;max-width:100%}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip button{all:unset;cursor:pointer;width:22px;height:22px;text-align:center;line-height:22px}
+.tools{display:flex;gap:8px;margin:26px 0 12px;flex-wrap:wrap;align-items:center}
+.tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}
+.tabs button{border:0;background:none;color:var(--mute);min-height:38px;padding:0 14px;border-radius:9px;font:inherit;font-size:15px;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--tint);color:var(--brand);font-weight:700}
+#q{flex:1 1 160px;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:0 14px;font:inherit;font-size:16px;background:var(--card);color:var(--ink)}
+.status{font-size:14px;color:var(--mute);margin:8px 0}
+.list{display:grid;gap:10px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:8px}
+.meta{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--mute);flex-wrap:wrap}
+.tag{background:var(--tint);color:var(--brand);border-radius:99px;padding:1px 10px}
+.txt{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto}
+.txt a{color:var(--brand)}
+.file{display:flex;gap:12px;align-items:center}
+.ico{flex:none;width:48px;height:48px;border-radius:12px;background:var(--tint);color:var(--brand);display:grid;place-items:center;font:700 12px "Readex Pro";text-transform:uppercase}
+.fname{font-weight:500;overflow-wrap:anywhere}
+.thumb{width:100%;max-height:340px;object-fit:contain;border-radius:12px;background:var(--tint)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.acts button{border:1px solid var(--line);background:none;color:var(--ink);border-radius:10px;min-height:40px;padding:0 14px;font:inherit;font-size:14px;cursor:pointer}
+.acts .main{background:var(--brand);color:var(--brandInk);border-color:var(--brand)}
+.acts .sure{background:var(--warn);color:#fff;border-color:var(--warn)}
+.empty{text-align:center;color:var(--mute);padding:36px 10px;border:2px dashed var(--line);border-radius:18px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
+.toast.show{opacity:1}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>جسر</h1>
+      <p class="sub">انقل نصوصك وملفاتك بين الجوال وأي كمبيوتر، بلا حساب.</p>
+    </div>
+    <button class="btn ghost" id="lockBtn" hidden>خروج</button>
+  </header>
+
+  <!-- شاشة الدخول -->
+  <section class="panel" id="login">
+    <h2>افتح درجك</h2>
+    <p>اكتب عبارتك السرية. نفس العبارة تفتح نفس الدرج من أي جهاز. أول مرة؟ اختر عبارة جديدة وسيُنشأ لك درج فارغ.</p>
+    <form id="loginForm">
+      <input class="field" id="secret" type="password" autocomplete="off" placeholder="العبارة السرية (8 أحرف على الأقل)" aria-label="العبارة السرية">
+      <label class="check"><input type="checkbox" id="show"> إظهار العبارة</label>
+      <label class="check"><input type="checkbox" id="remember"> تذكرني على هذا الجهاز (لا تفعّلها في الأجهزة العامة)</label>
+      <div class="row">
+        <button class="btn primary" id="openBtn" type="submit">فتح</button>
+        <span class="hint" id="loginMsg">لا يمكن استرجاع العبارة إن نسيتها، فاختر شيئًا تتذكره.</span>
+      </div>
+    </form>
+  </section>
+
+  <!-- الدرج -->
+  <div id="app" hidden>
+    <section class="panel" aria-label="إرسال">
+      <textarea class="field" id="text" placeholder="اكتب أو الصق نصًا أو رابطًا…"></textarea>
+      <label class="drop" id="drop">
+        <input type="file" id="file" multiple hidden>
+        اضغط لاختيار ملفات أو صور، أو اسحبها هنا
+      </label>
+      <div class="picked" id="picked"></div>
+      <div class="row">
+        <button class="btn primary" id="go">إرسال</button>
+        <span class="hint">كل شيء يُشفَّر على جهازك قبل الإرسال · حد الملف 49 ميجابايت</span>
+      </div>
+    </section>
+
+    <div class="tools">
+      <div class="tabs" role="group" aria-label="تصفية">
+        <button data-f="all" aria-pressed="true">الكل</button>
+        <button data-f="text" aria-pressed="false">نصوص</button>
+        <button data-f="file" aria-pressed="false">ملفات</button>
+      </div>
+      <input id="q" type="search" placeholder="بحث">
+      <button class="btn ghost" id="refresh">تحديث</button>
+    </div>
+    <p class="status" id="status"></p>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const te=new TextEncoder(),td=new TextDecoder();
+const DEV=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)?'الجوال':'الكمبيوتر';
+const MAX=49*1048576, BUCKET='drop', IDLE_MS=15*60*1000, LS='jisr-secret';
+let sb=null,room=null,key=null,items=[],filter='all',query='',picked=[],poll=null,idle=null,urls=[];
+const cache=new Map();
+
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const linkify=s=>esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+const size=b=>b<1024?b+' بايت':b<1048576?Math.round(b/1024)+' ك.ب':(b/1048576).toFixed(1)+' م.ب';
+const when=t=>{const d=new Date(t),f={hour:'numeric',minute:'2-digit'};
+  return d.toDateString()===new Date().toDateString()?'اليوم '+d.toLocaleTimeString('ar-SA',f):d.toLocaleDateString('ar-SA',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('ar-SA',f)};
+const ext=n=>(String(n).split('.').pop()||'ملف').slice(0,4);
+let tt;const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2400)};
+const status=m=>{$('status').textContent=m||''};
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=32768)s+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));return btoa(s)};
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+
+// ---------- التشفير ----------
+async function derive(secret){
+  const base=await crypto.subtle.importKey('raw',te.encode(secret),'PBKDF2',false,['deriveBits','deriveKey']);
+  const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:te.encode('jisr-room-v1'),iterations:200000,hash:'SHA-256'},base,256);
+  const k=await crypto.subtle.deriveKey({name:'PBKDF2',salt:te.encode('jisr-key-v1'),iterations:200000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  return {room:hex(bits),key:k};
+}
+async function seal(bytes){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,bytes));
+  const out=new Uint8Array(12+ct.length);out.set(iv);out.set(ct,12);return out;
+}
+async function unseal(u8){
+  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:u8.subarray(0,12)},key,u8.subarray(12)));
+}
+const sealJSON=async o=>b64(await seal(te.encode(JSON.stringify(o))));
+const openJSON=async s=>JSON.parse(td.decode(await unseal(unb64(s))));
+
+// ---------- الدخول والخروج ----------
+function setupClient(){
+  const c=window.JISR_CONFIG;
+  if(!c||!c.url||c.url.includes('XXXX')||!window.supabase){
+    $('loginMsg').innerHTML='<span class="err">الصفحة غير مهيأة بعد: عدّل ملف config.js ببيانات Supabase.</span>';return false}
+  sb=window.supabase.createClient(c.url,c.key,{auth:{persistSession:false,autoRefreshToken:false}});
+  return true;
+}
+async function unlock(secret,remember){
+  if(secret.length<8){$('loginMsg').innerHTML='<span class="err">العبارة قصيرة، اجعلها 8 أحرف على الأقل.</span>';return}
+  if(!sb&&!setupClient())return;
+  $('openBtn').disabled=true;$('openBtn').textContent='جارٍ الفتح…';
+  try{
+    ({room,key}=await derive(secret));
+    try{remember?localStorage.setItem(LS,secret):localStorage.removeItem(LS)}catch{}
+    $('secret').value='';$('login').hidden=true;$('app').hidden=false;$('lockBtn').hidden=false;
+    await load(true);
+    poll=setInterval(()=>{if(document.visibilityState==='visible')load()},20000);
+    if(!remember)armIdle();
+  }catch(e){$('loginMsg').innerHTML='<span class="err">تعذر الفتح. تأكد من الاتصال وحاول مرة أخرى.</span>';lock(false)}
+  $('openBtn').disabled=false;$('openBtn').textContent='فتح';
+}
+function lock(forget=true){
+  room=null;key=null;items=[];cache.clear();picked=[];renderPicked();
+  urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
+  clearInterval(poll);clearTimeout(idle);
+  if(forget){try{localStorage.removeItem(LS)}catch{}}
+  $('list').innerHTML='';$('text').value='';status('');
+  $('app').hidden=true;$('lockBtn').hidden=true;$('login').hidden=false;
+}
+function armIdle(){
+  const reset=()=>{clearTimeout(idle);if(room)idle=setTimeout(()=>{lock();toast('أُغلق الدرج تلقائيًا لعدم النشاط')},IDLE_MS)};
+  ['click','keydown','touchstart','scroll'].forEach(ev=>document.addEventListener(ev,reset,{passive:true}));reset();
+}
+$('loginForm').addEventListener('submit',e=>{e.preventDefault();unlock($('secret').value.trim(),$('remember').checked)});
+$('show').addEventListener('change',e=>{$('secret').type=e.target.checked?'text':'password'});
+$('lockBtn').addEventListener('click',()=>{lock();toast('تم الخروج')});
+
+// ---------- القراءة والعرض ----------
+async function load(first){
+  if(!room)return;
+  if(first)status('جارٍ التحميل…');
+  const {data,error}=await sb.rpc('list_items',{p_room:room});
+  if(error){status('تعذر الاتصال بالخادم. إن طال الأمر فقد يكون المشروع متوقفًا مؤقتًا.');return}
+  const out=[];
+  for(const r of data){
+    if(!cache.has(r.id)){try{cache.set(r.id,await openJSON(r.data))}catch{continue}}
+    out.push({...r,...cache.get(r.id)});
+  }
+  items=out;
+  status(items.length?items.length+' عنصر':'');
+  render();
+}
+function render(){
+  const q=query.trim().toLowerCase();
+  const list=items.filter(it=>(filter==='all'||it.kind===filter)&&(!q||(it.text||it.name||'').toLowerCase().includes(q)));
+  if(!items.length){$('list').innerHTML='<div class="empty">الدرج فارغ. إذا كنت تتوقع محتوى هنا فتأكد أنك كتبت العبارة نفسها حرفيًا.</div>';return}
+  if(!list.length){$('list').innerHTML='<div class="empty">لا توجد نتائج مطابقة.</div>';return}
+  $('list').innerHTML=list.map(it=>{
+    const head=`<div class="meta"><span class="tag">من ${esc(it.from||'')}</span><span>${when(it.created_at)}</span>${it.kind==='file'?`<span>${size(it.size||0)}</span>`:''}</div>`;
+    const del=`<button data-a="del" data-id="${it.id}">حذف</button>`;
+    if(it.kind==='text')return `<article class="item">${head}<div class="txt">${linkify(it.text||'')}</div><div class="acts"><button class="main" data-a="copy" data-id="${it.id}">نسخ</button>${del}</div></article>`;
+    const viewable=/^(image\/|application\/pdf|text\/|video\/|audio\/)/.test(it.type||'');
+    return `<article class="item" id="i-${it.id}">${head}<div class="file"><div class="ico">${esc(ext(it.name))}</div><div class="fname">${esc(it.name)}</div></div><div class="pv"></div><div class="acts"><button class="main" data-a="dl" data-id="${it.id}">تنزيل</button>${viewable?`<button data-a="view" data-id="${it.id}">عرض</button>`:''}${del}</div></article>`;
+  }).join('');
+}
+
+async function fetchFile(it){
+  const {data,error}=await sb.storage.from(BUCKET).download(it.path);
+  if(error)throw error;
+  const plain=await unseal(new Uint8Array(await data.arrayBuffer()));
+  const u=URL.createObjectURL(new Blob([plain],{type:it.type||'application/octet-stream'}));urls.push(u);return u;
+}
+
+const pending=new Set();
+$('list').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-a]');if(!b)return;
+  const it=items.find(x=>x.id===b.dataset.id);if(!it)return;
+  const a=b.dataset.a;
+  if(a==='copy'){try{await navigator.clipboard.writeText(it.text);toast('تم النسخ')}catch{toast('تعذر النسخ، حدد النص يدويًا')}return}
+  if(a==='dl'||a==='view'){
+    const old=b.textContent;b.disabled=true;b.textContent='جارٍ فك التشفير…';
+    try{
+      const u=await fetchFile(it);
+      if(a==='dl'){const l=document.createElement('a');l.href=u;l.download=it.name||'file';document.body.appendChild(l);l.click();l.remove()}
+      else{
+        const pv=document.querySelector('#i-'+CSS.escape(it.id)+' .pv');
+        if(/^image\//.test(it.type))pv.innerHTML=`<img class="thumb" src="${u}" alt="">`;
+        else if(/^video\//.test(it.type))pv.innerHTML=`<video class="thumb" src="${u}" controls></video>`;
+        else if(/^audio\//.test(it.type))pv.innerHTML=`<audio src="${u}" controls style="width:100%"></audio>`;
+        else window.open(u,'_blank');
+      }
+    }catch{toast('تعذر فتح الملف')}
+    b.disabled=false;b.textContent=old;return;
+  }
+  if(a==='del'){
+    if(!pending.has(it.id)){pending.add(it.id);b.textContent='اضغط مرة أخرى للتأكيد';b.classList.add('sure');
+      setTimeout(()=>{pending.delete(it.id);if(b.isConnected){b.textContent='حذف';b.classList.remove('sure')}},4000);return}
+    pending.delete(it.id);b.disabled=true;
+    const {data:path,error}=await sb.rpc('delete_item',{p_room:room,p_id:it.id});
+    if(error){toast('تعذر الحذف');b.disabled=false;return}
+    if(path)await sb.storage.from(BUCKET).remove([path]);
+    cache.delete(it.id);items=items.filter(x=>x.id!==it.id);render();toast('تم الحذف');
+  }
+});
+
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  filter=b.dataset.f;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));render()}));
+$('q').addEventListener('input',e=>{query=e.target.value;render()});
+$('refresh').addEventListener('click',()=>load(true));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load()});
+
+// ---------- الإرسال ----------
+function renderPicked(){
+  $('picked').innerHTML=picked.map((f,i)=>`<span class="chip"><span>${esc(f.name)} · ${size(f.size)}</span><button data-i="${i}" aria-label="إزالة">✕</button></span>`).join('');
+}
+const addFiles=fs=>{for(const f of fs){if(f.size>MAX)toast('«'+f.name+'» أكبر من 49 ميجابايت');else picked.push(f)}renderPicked()};
+$('picked').addEventListener('click',e=>{const b=e.target.closest('button');if(b){picked.splice(+b.dataset.i,1);renderPicked()}});
+$('file').addEventListener('change',e=>{addFiles(e.target.files);e.target.value=''});
+const drop=$('drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('on')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('on')}));
+drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
+document.addEventListener('paste',e=>{if(!room||e.target===$('text'))return;const fs=e.clipboardData?.files;if(fs&&fs.length)addFiles(fs)});
+$('text').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))$('go').click()});
+
+$('go').addEventListener('click',async()=>{
+  const text=$('text').value.trim();
+  if(!text&&!picked.length){toast('اكتب نصًا أو اختر ملفًا أولًا');return}
+  const go=$('go');go.disabled=true;
+  try{
+    if(text){
+      go.textContent='جارٍ الإرسال…';
+      const {error}=await sb.rpc('add_item',{p_room:room,p_kind:'text',p_data:await sealJSON({text,from:DEV}),p_path:null,p_size:text.length});
+      if(error)throw error;$('text').value='';
+    }
+    const files=[...picked];
+    for(let i=0;i<files.length;i++){
+      const f=files[i];go.textContent=`جارٍ رفع ${i+1} من ${files.length}…`;
+      const body=await seal(new Uint8Array(await f.arrayBuffer()));
+      const path=room+'/'+crypto.randomUUID();
+      const up=await sb.storage.from(BUCKET).upload(path,new Blob([body]),{contentType:'application/octet-stream'});
+      if(up.error)throw up.error;
+      const {error}=await sb.rpc('add_item',{p_room:room,p_kind:'file',p_data:await sealJSON({name:f.name,type:f.type,from:DEV}),p_path:path,p_size:f.size});
+      if(error){await sb.storage.from(BUCKET).remove([path]);throw error}
+      picked.splice(picked.indexOf(f),1);renderPicked();
+    }
+    toast('تم الإرسال');await load();
+  }catch(e){toast('تعذر الإرسال، حاول مرة أخرى')}
+  go.disabled=false;go.textContent='إرسال';
+});
+
+// ---------- البداية ----------
+setupClient();
+try{const s=localStorage.getItem(LS);if(s){$('remember').checked=true;unlock(s,true)}}catch{}
+}
+</script>
+</body>
+</html>
