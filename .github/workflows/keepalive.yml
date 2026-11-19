@@ -1,8 +1,8 @@
-# keeps the free Supabase project active
+# keeps the free Supabase project active and deletes expired items daily
 name: keepalive
 on:
   schedule:
-    - cron: "17 6 */3 * *"
+    - cron: "17 3 * * *"
   workflow_dispatch:
 permissions:
   contents: write
@@ -11,14 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Ping Supabase
+      - name: Ping Supabase and purge expired items
         run: |
           URL=$(grep -oE 'https://[a-z0-9]+\.supabase\.co' config.js | head -1)
           KEY=$(grep -oE 'key: *"[^"]+"' config.js | sed -E 's/key: *"([^"]+)"/\1/')
-          curl -sS -f -X POST "$URL/rest/v1/rpc/list_items" \
-            -H "apikey: $KEY" \
-            -H "Content-Type: application/json" \
-            -d '{"p_room":"0000000000000000000000000000000000000000000000000000000000000000"}'
+          PATHS=$(curl -sS -f -X POST "$URL/rest/v1/rpc/purge_expired" \
+            -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}')
+          echo "expired: $PATHS"
+          BODY=$(echo "$PATHS" | jq -c '{prefixes: [.[] | select(. != null)]}')
+          if [ "$(echo "$BODY" | jq '.prefixes | length')" -gt 0 ]; then
+            curl -sS -f -X DELETE "$URL/storage/v1/object/drop" \
+              -H "apikey: $KEY" -H "Content-Type: application/json" -d "$BODY"
+          fi
       - name: Keep repo active
         run: |
           date -u > .last-ping
