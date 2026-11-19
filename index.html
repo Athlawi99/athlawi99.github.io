@@ -60,6 +60,9 @@ textarea.field{min-height:120px;padding:14px 16px;resize:vertical;font-size:17px
 .acts button{border:1px solid var(--line);background:none;color:var(--ink);border-radius:10px;min-height:40px;padding:0 14px;font:inherit;font-size:14px;cursor:pointer}
 .acts .main{background:var(--brand);color:var(--brandInk);border-color:var(--brand)}
 .acts .sure{background:var(--warn);color:#fff;border-color:var(--warn)}
+.exp{color:var(--warn)}
+.danger{background:none;color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 50%,transparent)}
+.danger.sure{background:var(--warn);color:#fff}
 .empty{text-align:center;color:var(--mute);padding:36px 10px;border:2px dashed var(--line);border-radius:18px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
 .toast.show{opacity:1}
@@ -101,6 +104,7 @@ textarea.field{min-height:120px;padding:14px 16px;resize:vertical;font-size:17px
         اضغط لاختيار ملفات أو صور، أو اسحبها هنا
       </label>
       <div class="picked" id="picked"></div>
+      <label class="check"><input type="checkbox" id="ttl" checked> احذف ما أرسله تلقائيًا بعد يوم</label>
       <div class="row">
         <button class="btn primary" id="go">إرسال</button>
         <span class="hint">كل شيء يُشفَّر على جهازك قبل الإرسال · حد الملف 49 ميجابايت</span>
@@ -115,6 +119,7 @@ textarea.field{min-height:120px;padding:14px 16px;resize:vertical;font-size:17px
       </div>
       <input id="q" type="search" placeholder="بحث">
       <button class="btn ghost" id="refresh">تحديث</button>
+      <button class="btn danger" id="wipe">حذف الكل</button>
     </div>
     <p class="status" id="status"></p>
     <div class="list" id="list"></div>
@@ -138,6 +143,7 @@ const linkify=s=>esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_b
 const size=b=>b<1024?b+' بايت':b<1048576?Math.round(b/1024)+' ك.ب':(b/1048576).toFixed(1)+' م.ب';
 const when=t=>{const d=new Date(t),f={hour:'numeric',minute:'2-digit'};
   return d.toDateString()===new Date().toDateString()?'اليوم '+d.toLocaleTimeString('ar-SA',f):d.toLocaleDateString('ar-SA',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('ar-SA',f)};
+const left=t=>{const m=Math.max(0,Math.round((new Date(t)-Date.now())/60000));return m>=60?Math.round(m/60)+' ساعة':m+' دقيقة'};
 const ext=n=>(String(n).split('.').pop()||'ملف').slice(0,4);
 let tt;const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2400)};
 const status=m=>{$('status').textContent=m||''};
@@ -205,6 +211,7 @@ $('lockBtn').addEventListener('click',()=>{lock();toast('تم الخروج')});
 async function load(first){
   if(!room)return;
   if(first)status('جارٍ التحميل…');
+  purge().catch(()=>{});
   const {data,error}=await sb.rpc('list_items',{p_room:room});
   if(error){status('تعذر الاتصال بالخادم. إن طال الأمر فقد يكون المشروع متوقفًا مؤقتًا.');return}
   const out=[];
@@ -222,7 +229,7 @@ function render(){
   if(!items.length){$('list').innerHTML='<div class="empty">الدرج فارغ. إذا كنت تتوقع محتوى هنا فتأكد أنك كتبت العبارة نفسها حرفيًا.</div>';return}
   if(!list.length){$('list').innerHTML='<div class="empty">لا توجد نتائج مطابقة.</div>';return}
   $('list').innerHTML=list.map(it=>{
-    const head=`<div class="meta"><span class="tag">من ${esc(it.from||'')}</span><span>${when(it.created_at)}</span>${it.kind==='file'?`<span>${size(it.size||0)}</span>`:''}</div>`;
+    const head=`<div class="meta"><span class="tag">من ${esc(it.from||'')}</span><span>${when(it.created_at)}</span>${it.kind==='file'?`<span>${size(it.size||0)}</span>`:''}${it.expires_at?`<span class="exp">يُحذف خلال ${left(it.expires_at)}</span>`:''}</div>`;
     const del=`<button data-a="del" data-id="${it.id}">حذف</button>`;
     if(it.kind==='text')return `<article class="item">${head}<div class="txt">${linkify(it.text||'')}</div><div class="acts"><button class="main" data-a="copy" data-id="${it.id}">نسخ</button>${del}</div></article>`;
     const viewable=/^(image\/|application\/pdf|text\/|video\/|audio\/)/.test(it.type||'');
@@ -296,7 +303,7 @@ $('go').addEventListener('click',async()=>{
   try{
     if(text){
       go.textContent='جارٍ الإرسال…';
-      const {error}=await sb.rpc('add_item',{p_room:room,p_kind:'text',p_data:await sealJSON({text,from:DEV}),p_path:null,p_size:text.length});
+      const {error}=await sb.rpc('add_item',{p_room:room,p_kind:'text',p_data:await sealJSON({text,from:DEV}),p_path:null,p_size:text.length,p_expires_hours:ttlHours()});
       if(error)throw error;$('text').value='';
     }
     const files=[...picked];
@@ -306,13 +313,39 @@ $('go').addEventListener('click',async()=>{
       const path=room+'/'+crypto.randomUUID();
       const up=await sb.storage.from(BUCKET).upload(path,new Blob([body]),{contentType:'application/octet-stream'});
       if(up.error)throw up.error;
-      const {error}=await sb.rpc('add_item',{p_room:room,p_kind:'file',p_data:await sealJSON({name:f.name,type:f.type,from:DEV}),p_path:path,p_size:f.size});
+      const {error}=await sb.rpc('add_item',{p_room:room,p_kind:'file',p_data:await sealJSON({name:f.name,type:f.type,from:DEV}),p_path:path,p_size:f.size,p_expires_hours:ttlHours()});
       if(error){await sb.storage.from(BUCKET).remove([path]);throw error}
       picked.splice(picked.indexOf(f),1);renderPicked();
     }
     toast('تم الإرسال');await load();
   }catch(e){toast('تعذر الإرسال، حاول مرة أخرى')}
   go.disabled=false;go.textContent='إرسال';
+});
+
+// ---------- خيار الحذف التلقائي وحذف الكل ----------
+try{const v=localStorage.getItem('jisr-ttl');if(v!==null)$('ttl').checked=v==='1'}catch{}
+$('ttl').addEventListener('change',e=>{try{localStorage.setItem('jisr-ttl',e.target.checked?'1':'0')}catch{}});
+const ttlHours=()=>$('ttl').checked?24:null;
+async function removePaths(paths){
+  const list=(paths||[]).filter(Boolean);
+  for(let i=0;i<list.length;i+=100)await sb.storage.from(BUCKET).remove(list.slice(i,i+100));
+}
+let lastPurge=0;
+async function purge(){
+  if(Date.now()-lastPurge<10*60*1000)return;lastPurge=Date.now();
+  const {data,error}=await sb.rpc('purge_expired');
+  if(!error)await removePaths(data);
+}
+let wipeArmed=false;
+$('wipe').addEventListener('click',async()=>{
+  const b=$('wipe');
+  if(!items.length){toast('الدرج فارغ أصلًا');return}
+  if(!wipeArmed){wipeArmed=true;b.textContent='متأكد؟ اضغط للحذف النهائي';b.classList.add('sure');
+    setTimeout(()=>{wipeArmed=false;b.textContent='حذف الكل';b.classList.remove('sure')},4000);return}
+  wipeArmed=false;b.disabled=true;b.textContent='جارٍ الحذف…';
+  const {data,error}=await sb.rpc('delete_all',{p_room:room});
+  if(error){toast('تعذر الحذف')}else{await removePaths(data);cache.clear();items=[];render();status('');toast('حُذف كل شيء')}
+  b.disabled=false;b.textContent='حذف الكل';b.classList.remove('sure');
 });
 
 // ---------- البداية ----------

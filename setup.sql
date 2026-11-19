@@ -62,3 +62,51 @@ drop policy if exists "jisr delete" on storage.objects;
 create policy "jisr insert" on storage.objects for insert to anon with check (bucket_id = 'drop');
 create policy "jisr read"   on storage.objects for select to anon using (bucket_id = 'drop');
 create policy "jisr delete" on storage.objects for delete to anon using (bucket_id = 'drop');
+-- jisr v2: auto-delete after a day + delete all
+alter table public.items add column if not exists expires_at timestamptz;
+
+drop function if exists public.list_items(text);
+create or replace function public.list_items(p_room text)
+returns table (id uuid, kind text, data text, path text, size bigint, created_at timestamptz, expires_at timestamptz)
+language sql security definer set search_path = public as $$
+  select i.id, i.kind, i.data, i.path, i.size, i.created_at, i.expires_at
+  from public.items i
+  where i.room = p_room and length(p_room) = 64
+    and (i.expires_at is null or i.expires_at > now())
+  order by i.created_at desc
+  limit 300;
+$$;
+
+drop function if exists public.add_item(text, text, text, text, bigint);
+create or replace function public.add_item(p_room text, p_kind text, p_data text, p_path text default null, p_size bigint default 0, p_expires_hours int default null)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare new_id uuid;
+begin
+  if length(p_room) <> 64 then raise exception 'bad room'; end if;
+  if length(p_data) > 500000 then raise exception 'too big'; end if;
+  if p_path is not null and split_part(p_path, '/', 1) <> p_room then raise exception 'bad path'; end if;
+  insert into public.items (room, kind, data, path, size, expires_at)
+  values (p_room, p_kind, p_data, p_path, p_size,
+          case when p_expires_hours between 1 and 720 then now() + make_interval(hours => p_expires_hours) end)
+  returning id into new_id;
+  return new_id;
+end $$;
+
+create or replace function public.delete_all(p_room text)
+returns setof text language sql security definer set search_path = public as $$
+  delete from public.items where room = p_room and length(p_room) = 64 returning path;
+$$;
+
+create or replace function public.purge_expired()
+returns setof text language sql security definer set search_path = public as $$
+  delete from public.items where expires_at is not null and expires_at <= now() returning path;
+$$;
+
+revoke all on function public.list_items(text) from public;
+revoke all on function public.add_item(text, text, text, text, bigint, int) from public;
+revoke all on function public.delete_all(text) from public;
+revoke all on function public.purge_expired() from public;
+grant execute on function public.list_items(text) to anon, authenticated;
+grant execute on function public.add_item(text, text, text, text, bigint, int) to anon, authenticated;
+grant execute on function public.delete_all(text) to anon, authenticated;
+grant execute on function public.purge_expired() to anon, authenticated;
